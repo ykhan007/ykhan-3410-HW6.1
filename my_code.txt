@@ -1,0 +1,71 @@
+# Attribution:
+# LCS and Edit Distance functions adapted from GeeksforGeeks
+# Modified in class to add ranking, word list, confidence, and edit distance
+
+# Longest Common Subsequence (LCS)
+def lcs(X, Y):
+    m = len(X)
+    n = len(Y)
+    L = [[0] * (n + 1) for i in range(m + 1)]
+
+    for i in range(m + 1):
+        for j in range(n + 1):
+            if i == 0 or j == 0:
+                L[i][j] = 0
+            elif X[i - 1] == Y[j - 1]:
+                L[i][j] = L[i - 1][j - 1] + 1
+            else:
+                L[i][j] = max(L[i - 1][j], L[i][j - 1])
+
+    return L[m][n]
+
+# Edit Distance
+def editDistDP(str1, str2):
+    m = len(str1)
+    n = len(str2)
+    dp = [[0 for x in range(n + 1)] for x in range(m + 1)]
+
+    for i in range(m + 1):
+        for j in range(n + 1):
+            if i == 0:
+                dp[i][j] = j
+            elif j == 0:
+                dp[i][j] = i
+            elif str1[i - 1] == str2[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1]
+            else:
+                dp[i][j] = 1 + min(dp[i][j - 1],    # Insert
+                                   dp[i - 1][j],    # Remove
+                                   dp[i - 1][j - 1])  # Replace
+    return dp[m][n]
+
+def main():
+    # Word list (like dictionary)
+    word_list = ["cat", "bat", "rat", "mat", "cart", "care", "dog"]
+
+    # User input (intentionally wrong spelling)
+    user_word = input("Enter a word: ")
+
+    results = []
+
+    # Compare user word to each candidate
+    for word in word_list:
+        lcs_score = lcs(user_word, word)
+        edit_distance = editDistDP(user_word, word)
+        confidence = lcs_score / max(len(user_word), len(word))  # ratio for confidence
+        results.append((word, lcs_score, edit_distance, confidence))
+
+    # Rank results (best matches first)
+    results.sort(key=lambda x: (x[2], -x[1]))  # prioritize lower edit distance, then higher LCS
+
+    # Print ranked suggestions
+    print("\nSuggestions:")
+    for word, lcs_score, edit_distance, confidence in results:
+        print(f"Word: {word}, LCS: {lcs_score}, Edit Distance: {edit_distance}, Confidence: {confidence:.2f}")
+
+    # If best match has low confidence
+    if results and results[0][3] < 0.5:
+        print("\n Low confidence: No close matches found.")
+
+if __name__ == "__main__":
+    main()
